@@ -3,48 +3,99 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
----
+import { getCollection } from 'astro:content';
 
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
 <!doctype html>
 <html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+    <style>
+      .page-wrapper {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+      }
+      .page-header {
+        border-bottom: 2px solid var(--navy);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2.5rem;
+      }
+      .page-header h1 {
+        font-size: 2.2rem;
+        color: var(--navy);
+        letter-spacing: -0.5px;
+      }
+      .page-header p {
+        color: var(--text-muted);
+        font-size: 1rem;
+        margin-top: 0.4rem;
+      }
+      .post-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .post-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 1.2rem 0;
+        border-bottom: 1px solid var(--border);
+        transition: all 0.2s ease;
+        gap: 1rem;
+      }
+      .post-item:hover .post-title {
+        color: var(--navy-light);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .post-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.15rem;
+        color: var(--navy);
+        transition: color 0.2s;
+      }
+      .post-date {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        font-style: italic;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 4rem 0;
+        color: var(--text-muted);
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <div class="page-wrapper">
+        <div class="page-header">
+          <h1>Latest Insights</h1>
+          <p>Commodity futures analysis from a student's perspective</p>
+        </div>
+        <div class="post-list">
+          {posts.length === 0 && (
+            <p class="empty-state">No posts yet — check back soon.</p>
+          )}
+          {posts.map((post) => (
+            <a class="post-item" href={`/blog/${post.slug}/`}>
+              <span class="post-title">{post.data.title}</span>
+              <span class="post-date">
+                {new Date(post.data.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </main>
+    <Footer />
+  </body>
 </html>
