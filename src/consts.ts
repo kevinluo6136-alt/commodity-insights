@@ -1,5 +1,2 @@
-// Place any global data in this file.
-// You can import this data from anywhere in your site by using the `import` keyword.
-
-export const SITE_TITLE = "Student Commodity Insights";
-export const SITE_DESCRIPTION = "A students view into commodity market analysis!";
+export const SITE_TITLE = 'Student Commodity Insights';
+export const SITE_DESCRIPTION = 'Interpretations of commodity futures markets by a student.';
