@@ -1,47 +1,14 @@
----
-import { SITE_TITLE } from '../consts';
----
-<header>
-  <nav>
-    <a class="site-title" href="/">{SITE_TITLE}</a>
-    <div class="nav-links">
-      <a href="/">Home</a>
-      <a href="/blog">Blog</a>
-      <a href="/about">About</a>
-    </div>
-  </nav>
-</header>
+<footer>
+  <p>© {new Date().getFullYear()} Student Commodity Insights. All rights reserved.</p>
+</footer>
 
 <style>
-  header {
+  footer {
     background-color: var(--navy);
-    padding: 1rem 2rem;
-  }
-  nav {
-    max-width: 780px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .site-title {
-    font-family: 'Playfair Display', serif;
-    color: var(--white);
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-  }
-  .nav-links {
-    display: flex;
-    gap: 2rem;
-  }
-  .nav-links a {
-    color: var(--white);
-    font-size: 0.95rem;
-    opacity: 0.85;
-    transition: opacity 0.2s;
-  }
-  .nav-links a:hover {
-    opacity: 1;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.85rem;
+    margin-top: 4rem;
   }
 </style>
