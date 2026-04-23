@@ -8,68 +8,87 @@ import { getCollection } from 'astro:content';
 const posts = (await getCollection('blog')).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
+
+function timeAgo(date: Date) {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  const days = Math.floor(seconds / 86400);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
+  if (weeks > 0) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+  if (days > 0) return `${days}d ago`;
+  return 'Today';
+}
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
     <style>
+      body {
+        background-color: #0f1f3d;
+      }
       .page-wrapper {
-        max-width: 780px;
+        max-width: 680px;
         margin: 0 auto;
-        padding: 3rem 1.5rem;
+        padding: 2.5rem 1.5rem;
       }
-      .page-header {
-        border-bottom: 2px solid var(--navy);
-        padding-bottom: 1.5rem;
-        margin-bottom: 2.5rem;
-      }
-      .page-header h1 {
-        font-size: 2.2rem;
-        color: var(--navy);
-        letter-spacing: -0.5px;
-      }
-      .page-header p {
-        color: var(--text-muted);
-        font-size: 1rem;
-        margin-top: 0.4rem;
+      .page-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        color: white;
+        text-align: center;
+        margin-bottom: 1.5rem;
       }
       .post-list {
         display: flex;
         flex-direction: column;
-        gap: 0;
       }
       .post-item {
         display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        padding: 1.2rem 0;
-        border-bottom: 1px solid var(--border);
-        transition: all 0.2s ease;
+        align-items: center;
         gap: 1rem;
+        padding: 1.1rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        text-decoration: none;
+        transition: background 0.2s;
       }
-      .post-item:hover .post-title {
-        color: var(--navy-light);
-        text-decoration: underline;
-        text-underline-offset: 3px;
+      .post-item:hover {
+        opacity: 0.8;
+      }
+      .post-icon {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 50%;
+        background-color: #1a3260;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b9fff;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+      .post-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
       }
       .post-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.15rem;
-        color: var(--navy);
-        transition: color 0.2s;
+        font-family: 'Source Serif 4', serif;
+        font-size: 1rem;
+        color: white;
+        line-height: 1.4;
       }
-      .post-date {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        white-space: nowrap;
-        font-style: italic;
+      .post-meta {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.4);
       }
       .empty-state {
         text-align: center;
-        padding: 4rem 0;
-        color: var(--text-muted);
+        color: rgba(255,255,255,0.4);
         font-style: italic;
+        padding: 3rem 0;
       }
     </style>
   </head>
@@ -77,20 +96,18 @@ const posts = (await getCollection('blog')).sort(
     <Header />
     <main>
       <div class="page-wrapper">
-        <div class="page-header">
-          <h1>Latest Insights</h1>
-          <p>Commodity futures analysis from a student's perspective</p>
-        </div>
+        <h1 class="page-title">Student Commodity Insights</h1>
         <div class="post-list">
           {posts.length === 0 && (
             <p class="empty-state">No posts yet — check back soon.</p>
           )}
           {posts.map((post) => (
             <a class="post-item" href={`/blog/${post.slug}/`}>
-              <span class="post-title">{post.data.title}</span>
-              <span class="post-date">
-                {new Date(post.data.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-              </span>
+              <div class="post-icon">S</div>
+              <div class="post-info">
+                <span class="post-title">{post.data.title}</span>
+                <span class="post-meta">{timeAgo(new Date(post.data.pubDate))} · Student Commodity Insights</span>
+              </div>
             </a>
           ))}
         </div>
