@@ -7,7 +7,6 @@ import Footer from '../components/Footer.astro';
 <html lang="en">
   <head>
     <BaseHead title="Markets | Student Commodity Insights" description="Live oil futures prices" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
       .page-wrapper {
         max-width: 860px;
@@ -21,52 +20,15 @@ import Footer from '../components/Footer.astro';
       }
       .page-header h1 { font-size: 2rem; color: var(--navy); }
       .page-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem; }
-      .prices-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-      }
-      .price-card {
-        background: var(--navy);
-        border-radius: 12px;
-        padding: 1.8rem;
-        color: white;
-      }
-      .price-card .label {
-        font-size: 0.85rem;
-        opacity: 0.6;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 0.5rem;
-      }
-      .price-card .price {
-        font-family: 'Playfair Display', serif;
-        font-size: 2.2rem;
-        font-weight: 700;
-        margin-bottom: 0.3rem;
-      }
-      .price-card .change { font-size: 0.95rem; font-weight: 600; }
-      .change.up { color: #4ade80; }
-      .change.down { color: #f87171; }
-      .loading { opacity: 0.5; font-style: italic; }
       .chart-section {
-        background: white;
+        margin-bottom: 2.5rem;
         border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
       }
-      .chart-section h2 { font-size: 1.1rem; color: var(--navy); margin-bottom: 1rem; }
-      .chart-wrapper { position: relative; height: 200px; }
-      .last-updated {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        text-align: right;
-        margin-top: 1rem;
-      }
-      @media (max-width: 500px) {
-        .prices-grid { grid-template-columns: 1fr; }
+      .chart-section h2 {
+        font-size: 1.1rem;
+        color: var(--navy);
+        margin-bottom: 1rem;
       }
     </style>
   </head>
@@ -76,145 +38,61 @@ import Footer from '../components/Footer.astro';
       <div class="page-wrapper">
         <div class="page-header">
           <h1>Oil Futures</h1>
-          <p>Live WTI & Brent crude oil prices — updates every 30 seconds</p>
+          <p>Live WTI & Brent crude oil prices</p>
         </div>
 
-        <div class="prices-grid">
-          <div class="price-card">
-            <div class="label">WTI Crude Oil</div>
-            <div class="price loading" id="wti-price">Loading...</div>
-            <div class="change" id="wti-change"></div>
-          </div>
-          <div class="price-card">
-            <div class="label">Brent Crude Oil</div>
-            <div class="price loading" id="brent-price">Loading...</div>
-            <div class="change" id="brent-change"></div>
+        <div class="chart-section">
+          <h2>WTI Crude Oil (CL1!)</h2>
+          <div class="tradingview-widget-container">
+            <div id="wti-widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+            {
+              "symbol": "NYMEX:CL1!",
+              "interval": "60",
+              "range": "5D",
+              "width": "100%",
+              "height": "400",
+              "theme": "dark",
+              "style": "1",
+              "locale": "en",
+              "toolbar_bg": "#0f1f3d",
+              "enable_publishing": false,
+              "hide_top_toolbar": false,
+              "hide_legend": false,
+              "save_image": false,
+              "container_id": "wti-widget"
+            }
+            </script>
           </div>
         </div>
 
         <div class="chart-section">
-          <h2>WTI Crude — Weekly Price Movement</h2>
-          <div class="chart-wrapper">
-            <canvas id="wti-chart"></canvas>
+          <h2>Brent Crude Oil (BZ1!)</h2>
+          <div class="tradingview-widget-container">
+            <div id="brent-widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+            {
+              "symbol": "ICEUS:B1!",
+              "interval": "60",
+              "range": "5D",
+              "width": "100%",
+              "height": "400",
+              "theme": "dark",
+              "style": "1",
+              "locale": "en",
+              "toolbar_bg": "#0f1f3d",
+              "enable_publishing": false,
+              "hide_top_toolbar": false,
+              "hide_legend": false,
+              "save_image": false,
+              "container_id": "brent-widget"
+            }
+            </script>
           </div>
         </div>
 
-        <div class="chart-section">
-          <h2>Brent Crude — Weekly Price Movement</h2>
-          <div class="chart-wrapper">
-            <canvas id="brent-chart"></canvas>
-          </div>
-        </div>
-
-        <p class="last-updated" id="last-updated"></p>
       </div>
     </main>
     <Footer />
-
-    <script>
-      const API_KEY = 'd7l96p1r01qm7o0b0mng';
-      let wtiChart = null;
-      let brentChart = null;
-
-      async function fetchQuote(symbol) {
-        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`);
-        return await res.json();
-      }
-
-      async function fetchCandles(symbol) {
-        const now = Math.floor(Date.now() / 1000);
-        const weekAgo = now - 7 * 24 * 60 * 60;
-        const res = await fetch(`https://finnhub.io/api/v1/forex/candle?symbol=${symbol}&resolution=60&from=${weekAgo}&to=${now}&token=${API_KEY}`);
-        return await res.json();
-      }
-
-      function buildChart(canvasId, labels, prices, color, existingChart) {
-        if (existingChart) existingChart.destroy();
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        return new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [{
-              data: prices,
-              borderColor: color,
-              backgroundColor: color + '18',
-              borderWidth: 2,
-              pointRadius: 0,
-              fill: true,
-              tension: 0.3
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: {
-                ticks: { maxTicksLimit: 7, font: { size: 11 } },
-                grid: { display: false }
-              },
-              y: {
-                ticks: {
-                  font: { size: 11 },
-                  callback: (v) => `$${v.toFixed(2)}`
-                },
-                grid: { color: 'rgba(0,0,0,0.05)' }
-              }
-            }
-          }
-        });
-      }
-
-      function updateCard(priceId, changeId, quote) {
-        const priceEl = document.getElementById(priceId);
-        const changeEl = document.getElementById(changeId);
-        const price = quote.c;
-        const prev = quote.pc;
-        const change = (price - prev).toFixed(2);
-        const pct = (((price - prev) / prev) * 100).toFixed(2);
-        const up = Number(change) >= 0;
-        priceEl.textContent = `$${price.toFixed(2)}`;
-        priceEl.classList.remove('loading');
-        changeEl.textContent = `${up ? '▲' : '▼'} $${Math.abs(change)} (${pct}%)`;
-        changeEl.className = `change ${up ? 'up' : 'down'}`;
-        return up;
-      }
-
-      async function loadAll() {
-        try {
-          const [wtiQuote, brentQuote] = await Promise.all([
-            fetchQuote('OANDA:WTICO_USD'),
-            fetchQuote('OANDA:BCOUSD')
-          ]);
-
-          const wtiUp = updateCard('wti-price', 'wti-change', wtiQuote);
-          const brentUp = updateCard('brent-price', 'brent-change', brentQuote);
-
-          const [wtiCandles, brentCandles] = await Promise.all([
-            fetchCandles('OANDA:WTICO_USD'),
-            fetchCandles('OANDA:BCOUSD')
-          ]);
-
-          if (wtiCandles.s === 'ok') {
-            const labels = wtiCandles.t.map(t => new Date(t * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
-            wtiChart = buildChart('wti-chart', labels, wtiCandles.c, wtiUp ? '#4ade80' : '#f87171', wtiChart);
-          }
-
-          if (brentCandles.s === 'ok') {
-            const labels = brentCandles.t.map(t => new Date(t * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
-            brentChart = buildChart('brent-chart', labels, brentCandles.c, brentUp ? '#4ade80' : '#f87171', brentChart);
-          }
-
-          document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
-        } catch (e) {
-          document.getElementById('wti-price').textContent = 'Unavailable';
-          document.getElementById('brent-price').textContent = 'Unavailable';
-        }
-      }
-
-      loadAll();
-      setInterval(loadAll, 30000);
-    </script>
   </body>
 </html>
