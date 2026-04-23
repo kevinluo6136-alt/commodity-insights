@@ -19,15 +19,8 @@ import Footer from '../components/Footer.astro';
         padding-bottom: 1.5rem;
         margin-bottom: 2.5rem;
       }
-      .page-header h1 {
-        font-size: 2rem;
-        color: var(--navy);
-      }
-      .page-header p {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        margin-top: 0.3rem;
-      }
+      .page-header h1 { font-size: 2rem; color: var(--navy); }
+      .page-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem; }
       .prices-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -53,10 +46,7 @@ import Footer from '../components/Footer.astro';
         font-weight: 700;
         margin-bottom: 0.3rem;
       }
-      .price-card .change {
-        font-size: 0.95rem;
-        font-weight: 600;
-      }
+      .price-card .change { font-size: 0.95rem; font-weight: 600; }
       .change.up { color: #4ade80; }
       .change.down { color: #f87171; }
       .loading { opacity: 0.5; font-style: italic; }
@@ -67,15 +57,8 @@ import Footer from '../components/Footer.astro';
         margin-bottom: 1.5rem;
         box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       }
-      .chart-section h2 {
-        font-size: 1.1rem;
-        color: var(--navy);
-        margin-bottom: 1rem;
-      }
-      .chart-wrapper {
-        position: relative;
-        height: 200px;
-      }
+      .chart-section h2 { font-size: 1.1rem; color: var(--navy); margin-bottom: 1rem; }
+      .chart-wrapper { position: relative; height: 200px; }
       .last-updated {
         font-size: 0.8rem;
         color: var(--text-muted);
@@ -110,14 +93,14 @@ import Footer from '../components/Footer.astro';
         </div>
 
         <div class="chart-section">
-          <h2>WTI Crude — Today's Price Movement</h2>
+          <h2>WTI Crude — Weekly Price Movement</h2>
           <div class="chart-wrapper">
             <canvas id="wti-chart"></canvas>
           </div>
         </div>
 
         <div class="chart-section">
-          <h2>Brent Crude — Today's Price Movement</h2>
+          <h2>Brent Crude — Weekly Price Movement</h2>
           <div class="chart-wrapper">
             <canvas id="brent-chart"></canvas>
           </div>
@@ -129,18 +112,26 @@ import Footer from '../components/Footer.astro';
     <Footer />
 
     <script>
-      let wtiChart: any = null;
-      let brentChart: any = null;
+      const API_KEY = 'd7l96p1r01qm7o0b0mng';
+      let wtiChart = null;
+      let brentChart = null;
 
-      function formatTime(timestamp: number) {
-        const d = new Date(timestamp * 1000);
-        return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      async function fetchQuote(symbol) {
+        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`);
+        return await res.json();
       }
 
-      function buildChart(canvasId: string, labels: string[], prices: number[], color: string, existingChart: any) {
+      async function fetchCandles(symbol) {
+        const now = Math.floor(Date.now() / 1000);
+        const weekAgo = now - 7 * 24 * 60 * 60;
+        const res = await fetch(`https://finnhub.io/api/v1/forex/candle?symbol=${symbol}&resolution=60&from=${weekAgo}&to=${now}&token=${API_KEY}`);
+        return await res.json();
+      }
+
+      function buildChart(canvasId, labels, prices, color, existingChart) {
         if (existingChart) existingChart.destroy();
-        const ctx = (document.getElementById(canvasId) as HTMLCanvasElement).getContext('2d')!;
-        return new (window as any).Chart(ctx, {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        return new Chart(ctx, {
           type: 'line',
           data: {
             labels,
@@ -160,13 +151,13 @@ import Footer from '../components/Footer.astro';
             plugins: { legend: { display: false } },
             scales: {
               x: {
-                ticks: { maxTicksLimit: 6, font: { size: 11 } },
+                ticks: { maxTicksLimit: 7, font: { size: 11 } },
                 grid: { display: false }
               },
               y: {
                 ticks: {
                   font: { size: 11 },
-                  callback: (v: number) => `$${v.toFixed(2)}`
+                  callback: (v) => `$${v.toFixed(2)}`
                 },
                 grid: { color: 'rgba(0,0,0,0.05)' }
               }
@@ -175,56 +166,50 @@ import Footer from '../components/Footer.astro';
         });
       }
 
-      async function fetchData(symbol: string) {
-const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1h&range=5d`);
-        const data = await res.json();
-        const result = data.chart.result[0];
-        const meta = result.meta;
-        const timestamps = result.timestamp || [];
-        const closes = result.indicators.quote[0].close || [];
-
-        const labels = timestamps.map((t: number) => formatTime(t));
-        const prices = closes.map((p: number | null) => p ?? null);
-
-        return {
-          price: meta.regularMarketPrice.toFixed(2),
-          change: (meta.regularMarketPrice - meta.chartPreviousClose).toFixed(2),
-          pct: (((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2),
-          labels,
-          prices
-        };
-      }
-
-      function updateCard(idPrice: string, idChange: string, data: any) {
-        const priceEl = document.getElementById(idPrice)!;
-        const changeEl = document.getElementById(idChange)!;
-        priceEl.textContent = `$${data.price}`;
+      function updateCard(priceId, changeId, quote) {
+        const priceEl = document.getElementById(priceId);
+        const changeEl = document.getElementById(changeId);
+        const price = quote.c;
+        const prev = quote.pc;
+        const change = (price - prev).toFixed(2);
+        const pct = (((price - prev) / prev) * 100).toFixed(2);
+        const up = Number(change) >= 0;
+        priceEl.textContent = `$${price.toFixed(2)}`;
         priceEl.classList.remove('loading');
-        const up = Number(data.change) >= 0;
-        changeEl.textContent = `${up ? '▲' : '▼'} $${Math.abs(Number(data.change))} (${data.pct}%)`;
+        changeEl.textContent = `${up ? '▲' : '▼'} $${Math.abs(change)} (${pct}%)`;
         changeEl.className = `change ${up ? 'up' : 'down'}`;
+        return up;
       }
 
       async function loadAll() {
         try {
-          const [wti, brent] = await Promise.all([
-            fetchData('CL=F'),
-            fetchData('BZ=F')
+          const [wtiQuote, brentQuote] = await Promise.all([
+            fetchQuote('OANDA:WTICO_USD'),
+            fetchQuote('OANDA:BCOUSD')
           ]);
 
-          updateCard('wti-price', 'wti-change', wti);
-          updateCard('brent-price', 'brent-change', brent);
+          const wtiUp = updateCard('wti-price', 'wti-change', wtiQuote);
+          const brentUp = updateCard('brent-price', 'brent-change', brentQuote);
 
-          const wtiColor = Number(wti.change) >= 0 ? '#4ade80' : '#f87171';
-          const brentColor = Number(brent.change) >= 0 ? '#4ade80' : '#f87171';
+          const [wtiCandles, brentCandles] = await Promise.all([
+            fetchCandles('OANDA:WTICO_USD'),
+            fetchCandles('OANDA:BCOUSD')
+          ]);
 
-          wtiChart = buildChart('wti-chart', wti.labels, wti.prices, wtiColor, wtiChart);
-          brentChart = buildChart('brent-chart', brent.labels, brent.prices, brentColor, brentChart);
+          if (wtiCandles.s === 'ok') {
+            const labels = wtiCandles.t.map(t => new Date(t * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+            wtiChart = buildChart('wti-chart', labels, wtiCandles.c, wtiUp ? '#4ade80' : '#f87171', wtiChart);
+          }
 
-          document.getElementById('last-updated')!.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+          if (brentCandles.s === 'ok') {
+            const labels = brentCandles.t.map(t => new Date(t * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+            brentChart = buildChart('brent-chart', labels, brentCandles.c, brentUp ? '#4ade80' : '#f87171', brentChart);
+          }
+
+          document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
-          document.getElementById('wti-price')!.textContent = 'Unavailable';
-          document.getElementById('brent-price')!.textContent = 'Unavailable';
+          document.getElementById('wti-price').textContent = 'Unavailable';
+          document.getElementById('brent-price').textContent = 'Unavailable';
         }
       }
 
