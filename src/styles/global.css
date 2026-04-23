@@ -32,3 +32,6 @@ a {
 h1, h2, h3 {
   font-family: 'Playfair Display', Georgia, serif;
 }
+h1, h2, h3 {
+  text-shadow: 0 0 20px rgba(201, 168, 76, 0.6), 0 0 40px rgba(201, 168, 76, 0.3);
+}
