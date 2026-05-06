@@ -4,108 +4,116 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
 import { getCollection } from 'astro:content';
-import FormattedDate from '../../components/FormattedDate.astro';
 
 const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
----
 
+function timeAgo(date: Date) {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  const days = Math.floor(seconds / 86400);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
+  if (weeks > 0) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+  if (days > 0) return `${days}d ago`;
+  return 'Today';
+}
+---
 <!doctype html>
 <html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
-				margin: 0;
-				padding: 0;
-			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
-			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
-				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
-			}
-			.date {
-				margin: 0;
-				color: rgb(var(--gray));
-			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
-			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
-				}
-			}
-		</style>
-	</head>
-	<body>
-		<Header />
-		<main>
-			<section>
-				<ul>
-					{
-						posts.map((post) => (
-							<li>
-								<a href={`/blog/${post.id}/`}>
-									<img width={720} height={360} src={post.data.heroImage} alt="" />
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</section>
-		</main>
-		<Footer />
-	</body>
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+    <style>
+      .page-wrapper {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+      }
+      .page-header {
+        border-bottom: 2px solid var(--navy);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2.5rem;
+      }
+      .page-header h1 {
+        font-size: 2rem;
+        color: var(--navy);
+      }
+      .post-list {
+        display: flex;
+        flex-direction: column;
+      }
+      .post-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.1rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+      .post-item:hover {
+        opacity: 0.8;
+      }
+      .post-icon {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 50%;
+        background-color: #1a3260;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b9fff;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+      .post-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .post-title {
+        font-family: 'Source Serif 4', serif;
+        font-size: 1rem;
+        color: white;
+        line-height: 1.4;
+      }
+      .post-meta {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.4);
+      }
+      .empty-state {
+        text-align: center;
+        color: rgba(255,255,255,0.4);
+        font-style: italic;
+        padding: 3rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <div class="page-wrapper">
+        <div class="page-header">
+          <h1>All Posts</h1>
+        </div>
+        <div class="post-list">
+          {posts.length === 0 && (
+            <p class="empty-state">No posts yet — check back soon.</p>
+          )}
+          {posts.map((post) => (
+            <a class="post-item" href={`/blog/${post.id}/`}>
+              <div class="post-icon">S</div>
+              <div class="post-info">
+                <span class="post-title">{post.data.title}</span>
+                <span class="post-meta">{timeAgo(new Date(post.data.pubDate))} · Student Commodity Insights</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </main>
+    <Footer />
+  </body>
 </html>
