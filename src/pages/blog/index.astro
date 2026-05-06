@@ -19,6 +19,10 @@ function timeAgo(date: Date) {
   if (days > 0) return `${days}d ago`;
   return 'Today';
 }
+
+function getSlug(id: string) {
+  return id.replace(/\.md$/, '').replace(/\.mdx$/, '');
+}
 ---
 <!doctype html>
 <html lang="en">
@@ -103,7 +107,7 @@ function timeAgo(date: Date) {
             <p class="empty-state">No posts yet — check back soon.</p>
           )}
           {posts.map((post) => (
-            <a class="post-item" href={`/blog/${post.slug}/`}>
+            <a class="post-item" href={`/blog/${getSlug(post.id)}/`}>
               <div class="post-icon">S</div>
               <div class="post-info">
                 <span class="post-title">{post.data.title}</span>
