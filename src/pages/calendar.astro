@@ -185,9 +185,9 @@ import Footer from '../components/Footer.astro';
       const API_KEY = 'VNJQUR88RZXL36F9';
 
       async function fetchWTIData() {
-        const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=USOIL&apikey=${API_KEY}&outputsize=compact`);
-        const data = await res.json();
-        return data['Time Series (Daily)'] || {};
+const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=WTI&apikey=${API_KEY}&outputsize=compact`);        const data = await res.json();
+        const series = data['Time Series (Daily)'] || data['data'] || {};
+return series;
       }
 
       function getColorClass(pct) {
