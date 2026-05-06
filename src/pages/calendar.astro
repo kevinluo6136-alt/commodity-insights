@@ -184,87 +184,94 @@ import Footer from '../components/Footer.astro';
     <script>
       const API_KEY = 'VNJQUR88RZXL36F9';
 
-      async function fetchWTIData() {
-const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=WTI&apikey=${API_KEY}&outputsize=compact`);        const data = await res.json();
-        const series = data['Time Series (Daily)'] || data['data'] || {};
-return series;
-      }
+async function fetchWTIData() {
+  const res = await fetch(`https://www.alphavantage.co/query?function=WTI&interval=daily&apikey=${API_KEY}`);
+  const data = await res.json();
+  const result = {};
+  if (data.data) {
+    data.data.forEach(item => {
+      result[item.date] = { close: parseFloat(item.value) };
+    });
+  }
+  return result;
+}
 
-      function getColorClass(pct) {
-        if (pct >= 1) return 'big-up';
-        if (pct > 0) return 'small-up';
-        if (pct <= -1) return 'big-down';
-        if (pct < 0) return 'small-down';
-        return 'flat';
-      }
+function getColorClass(pct) {
+  if (pct >= 1) return 'big-up';
+  if (pct > 0) return 'small-up';
+  if (pct <= -1) return 'big-down';
+  if (pct < 0) return 'small-down';
+  return 'flat';
+}
 
-      function buildCalendar(priceData) {
-        const grid = document.getElementById('calendar-grid');
-        document.getElementById('loading-text').style.display = 'none';
+function buildCalendar(priceData) {
+  const grid = document.getElementById('calendar-grid');
+  document.getElementById('loading-text').style.display = 'none';
 
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
 
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        for (let i = 0; i < firstDay; i++) {
-          const empty = document.createElement('div');
-          empty.className = 'day-cell empty';
-          grid.appendChild(empty);
-        }
+  const dates = Object.keys(priceData).sort();
 
-        const dates = Object.keys(priceData).sort();
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'day-cell empty';
+    grid.appendChild(empty);
+  }
 
-        for (let d = 1; d <= daysInMonth; d++) {
-          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-          const cell = document.createElement('div');
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const cell = document.createElement('div');
 
-          if (priceData[dateStr]) {
-            const close = parseFloat(priceData[dateStr]['4. close']);
-            const prevDate = dates[dates.indexOf(dateStr) - 1];
-            const prevClose = prevDate ? parseFloat(priceData[prevDate]['4. close']) : close;
-            const pct = ((close - prevClose) / prevClose) * 100;
-            const colorClass = getColorClass(pct);
+    if (priceData[dateStr]) {
+      const close = priceData[dateStr].close;
+      const idx = dates.indexOf(dateStr);
+      const prevDate = idx > 0 ? dates[idx - 1] : null;
+      const prevClose = prevDate ? priceData[prevDate].close : close;
+      const pct = ((close - prevClose) / prevClose) * 100;
+      const colorClass = getColorClass(pct);
 
-            cell.className = `day-cell ${colorClass}`;
-            cell.innerHTML = `<span class="day-number">${d}</span><span class="day-price">$${close.toFixed(1)}</span>`;
-            cell.addEventListener('click', () => openModal(dateStr, close, pct));
-          } else {
-            cell.className = 'day-cell no-data';
-            cell.innerHTML = `<span class="day-number" style="opacity:0.3">${d}</span>`;
-          }
+      cell.className = `day-cell ${colorClass}`;
+      cell.innerHTML = `<span class="day-number">${d}</span><span class="day-price">$${close.toFixed(1)}</span>`;
+      cell.addEventListener('click', () => openModal(dateStr, close, pct));
+    } else {
+      cell.className = 'day-cell no-data';
+      cell.innerHTML = `<span class="day-number" style="opacity:0.3">${d}</span>`;
+    }
 
-          grid.appendChild(cell);
-        }
-      }
+    grid.appendChild(cell);
+  }
+}
 
-      function openModal(date, price, pct) {
-        document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById('modal-price').textContent = `$${price.toFixed(2)}`;
-        const changeEl = document.getElementById('modal-change');
-        const up = pct >= 0;
-        changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}% on the day`;
-        changeEl.className = `change ${up ? 'up' : 'down'}`;
-        document.getElementById('modal-dotjots').innerHTML = '<div class="dot-jot">Dot jots coming soon — check back after the automation is fully set up.</div>';
-        document.getElementById('modal-summary').textContent = 'Daily summary coming soon.';
-        document.getElementById('modal-overlay').classList.add('active');
-      }
+function openModal(date, price, pct) {
+  document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('modal-price').textContent = `$${price.toFixed(2)}`;
+  const changeEl = document.getElementById('modal-change');
+  const up = pct >= 0;
+  changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}% on the day`;
+  changeEl.className = `change ${up ? 'up' : 'down'}`;
+  document.getElementById('modal-dotjots').innerHTML = '<div class="dot-jot">Dot jots coming soon.</div>';
+  document.getElementById('modal-summary').textContent = 'Daily summary coming soon.';
+  document.getElementById('modal-overlay').classList.add('active');
+}
 
-      document.getElementById('modal-close').addEventListener('click', () => {
-        document.getElementById('modal-overlay').classList.remove('active');
-      });
+document.getElementById('modal-close').addEventListener('click', () => {
+  document.getElementById('modal-overlay').classList.remove('active');
+});
 
-      document.getElementById('modal-overlay').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('modal-overlay')) {
-          document.getElementById('modal-overlay').classList.remove('active');
-        }
-      });
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+});
 
-      fetchWTIData().then(buildCalendar).catch(() => {
-        document.getElementById('loading-text').textContent = 'Could not load price data.';
-      });
+fetchWTIData().then(buildCalendar).catch(() => {
+  document.getElementById('loading-text').textContent = 'Could not load price data.';
+});
     </script>
   </body>
 </html>
