@@ -1,0 +1,270 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title="Calendar | Student Commodity Insights" description="Daily WTI oil price calendar" />
+    <style>
+      .page-wrapper {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+      }
+      .page-header {
+        border-bottom: 2px solid var(--navy);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2.5rem;
+      }
+      .page-header h1 { font-size: 2rem; color: var(--navy); }
+      .page-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem; }
+      .legend {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+      .legend-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+      }
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+      }
+      .day-label {
+        text-align: center;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        padding: 0.3rem 0;
+        font-weight: 600;
+      }
+      .day-cell {
+        aspect-ratio: 1;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s;
+        position: relative;
+      }
+      .day-cell:hover { transform: scale(1.05); }
+      .day-cell.empty { background: transparent; cursor: default; }
+      .day-cell.flat { background: #6b7280; }
+      .day-cell.small-up { background: #86efac; }
+      .day-cell.big-up { background: #16a34a; }
+      .day-cell.small-down { background: #fca5a5; }
+      .day-cell.big-down { background: #dc2626; }
+      .day-cell.no-data { background: #1f2937; }
+      .day-number {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: white;
+      }
+      .day-price {
+        font-size: 0.65rem;
+        color: rgba(255,255,255,0.8);
+      }
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-overlay.active { display: flex; }
+      .modal {
+        background: #0f1f3d;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        color: white;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      .modal h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+      .modal .price { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
+      .modal .change { font-size: 1rem; margin-bottom: 1.5rem; }
+      .modal .change.up { color: #4ade80; }
+      .modal .change.down { color: #f87171; }
+      .modal h3 { font-size: 1rem; opacity: 0.7; margin-bottom: 0.5rem; margin-top: 1.5rem; }
+      .modal .dot-jot { 
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        padding: 0.8rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      .modal .summary {
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        padding: 0.8rem;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+      .modal-close {
+        float: right;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        opacity: 0.7;
+      }
+      .loading-text {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 2rem;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <div class="page-wrapper">
+        <div class="page-header">
+          <h1>WTI Price Calendar</h1>
+          <p>Daily closing prices — click any day for details</p>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div> Big gain (+1%+)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#86efac"></div> Small gain</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div> Flat</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fca5a5"></div> Small drop</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div> Big drop (-1%+)</div>
+        </div>
+
+        <div class="calendar-grid" id="calendar-grid">
+          <div class="day-label">Sun</div>
+          <div class="day-label">Mon</div>
+          <div class="day-label">Tue</div>
+          <div class="day-label">Wed</div>
+          <div class="day-label">Thu</div>
+          <div class="day-label">Fri</div>
+          <div class="day-label">Sat</div>
+        </div>
+
+        <p class="loading-text" id="loading-text">Loading price data...</p>
+      </div>
+    </main>
+
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal">
+        <button class="modal-close" id="modal-close">×</button>
+        <h2 id="modal-date"></h2>
+        <div class="price" id="modal-price"></div>
+        <div class="change" id="modal-change"></div>
+        <h3>DOT JOTS</h3>
+        <div id="modal-dotjots"></div>
+        <h3>DAILY SUMMARY</h3>
+        <div class="summary" id="modal-summary"></div>
+      </div>
+    </div>
+
+    <script>
+      const API_KEY = 'VNJQUR88RZXL36F9';
+
+      async function fetchWTIData() {
+        const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=USOIL&apikey=${API_KEY}&outputsize=compact`);
+        const data = await res.json();
+        return data['Time Series (Daily)'] || {};
+      }
+
+      function getColorClass(pct) {
+        if (pct >= 1) return 'big-up';
+        if (pct > 0) return 'small-up';
+        if (pct <= -1) return 'big-down';
+        if (pct < 0) return 'small-down';
+        return 'flat';
+      }
+
+      function buildCalendar(priceData) {
+        const grid = document.getElementById('calendar-grid');
+        document.getElementById('loading-text').style.display = 'none';
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) {
+          const empty = document.createElement('div');
+          empty.className = 'day-cell empty';
+          grid.appendChild(empty);
+        }
+
+        const dates = Object.keys(priceData).sort();
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const cell = document.createElement('div');
+
+          if (priceData[dateStr]) {
+            const close = parseFloat(priceData[dateStr]['4. close']);
+            const prevDate = dates[dates.indexOf(dateStr) - 1];
+            const prevClose = prevDate ? parseFloat(priceData[prevDate]['4. close']) : close;
+            const pct = ((close - prevClose) / prevClose) * 100;
+            const colorClass = getColorClass(pct);
+
+            cell.className = `day-cell ${colorClass}`;
+            cell.innerHTML = `<span class="day-number">${d}</span><span class="day-price">$${close.toFixed(1)}</span>`;
+            cell.addEventListener('click', () => openModal(dateStr, close, pct));
+          } else {
+            cell.className = 'day-cell no-data';
+            cell.innerHTML = `<span class="day-number" style="opacity:0.3">${d}</span>`;
+          }
+
+          grid.appendChild(cell);
+        }
+      }
+
+      function openModal(date, price, pct) {
+        document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('modal-price').textContent = `$${price.toFixed(2)}`;
+        const changeEl = document.getElementById('modal-change');
+        const up = pct >= 0;
+        changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}% on the day`;
+        changeEl.className = `change ${up ? 'up' : 'down'}`;
+        document.getElementById('modal-dotjots').innerHTML = '<div class="dot-jot">Dot jots coming soon — check back after the automation is fully set up.</div>';
+        document.getElementById('modal-summary').textContent = 'Daily summary coming soon.';
+        document.getElementById('modal-overlay').classList.add('active');
+      }
+
+      document.getElementById('modal-close').addEventListener('click', () => {
+        document.getElementById('modal-overlay').classList.remove('active');
+      });
+
+      document.getElementById('modal-overlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modal-overlay')) {
+          document.getElementById('modal-overlay').classList.remove('active');
+        }
+      });
+
+      fetchWTIData().then(buildCalendar).catch(() => {
+        document.getElementById('loading-text').textContent = 'Could not load price data.';
+      });
+    </script>
+  </body>
+</html>
