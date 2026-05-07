@@ -233,11 +233,11 @@ function buildCalendar(priceData) {
 
     if (priceData[dateStr]) {
       const close = priceData[dateStr].close;
-      const idx = dates.indexOf(dateStr);
-      const prevDate = idx > 0 ? dates[idx - 1] : null;
-      const prevClose = prevDate ? priceData[prevDate].close : close;
-      const pct = ((close - prevClose) / prevClose) * 100;
-      const colorClass = getColorClass(pct);
+const idx = dates.indexOf(dateStr);
+const prevDate = idx > 0 ? dates[idx - 1] : null;
+const prevClose = prevDate && priceData[prevDate] ? priceData[prevDate].close : null;
+const pct = prevClose !== null ? ((close - prevClose) / prevClose) * 100 : 0;
+const colorClass = prevClose !== null ? getColorClass(pct) : 'flat';
 
       cell.className = `day-cell ${colorClass}`;
       cell.innerHTML = `<span class="day-number">${d}</span>`;
