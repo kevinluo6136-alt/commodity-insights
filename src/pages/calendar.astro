@@ -187,23 +187,11 @@ import Footer from '../components/Footer.astro';
     </div>
 
     <script>
-      const API_KEY = 'VNJQUR88RZXL36F9';
-
-      async function fetchWTIData() {
-        const res = await fetch(
-          `https://www.alphavantage.co/query?function=WTI&interval=daily&apikey=${API_KEY}`
-        );
-        const data = await res.json();
-        const result = {};
-        if (data && data.data && Array.isArray(data.data)) {
-          data.data.forEach(item => {
-            if (item.date && item.value && item.value !== '.') {
-              result[item.date] = parseFloat(item.value);
-            }
-          });
-        }
-        return result;
-      }
+async function fetchWTIData() {
+  const res = await fetch('https://wti-price-cache.kevinluo6136.workers.dev');
+  const data = await res.json();
+  return data;
+}
 
       function getColorClass(pct) {
   if (pct >= 5) return 'big-up';
