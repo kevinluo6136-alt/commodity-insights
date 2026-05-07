@@ -51,15 +51,17 @@ import Footer from '../components/Footer.astro';
         font-weight: 600;
       }
       .day-cell {
-        aspect-ratio: 1;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: transform 0.15s;
-        position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s;
+  position: relative;
+  min-height: 52px;
+}
       }
       .day-cell:hover { transform: scale(1.05); }
       .day-cell.empty { background: transparent; cursor: default; }
@@ -238,7 +240,7 @@ function buildCalendar(priceData) {
       const colorClass = getColorClass(pct);
 
       cell.className = `day-cell ${colorClass}`;
-      cell.innerHTML = `<span class="day-number">${d}</span><span class="day-price">$${close.toFixed(1)}</span>`;
+      cell.innerHTML = `<span class="day-number">${d}</span>`;
       cell.addEventListener('click', () => openModal(dateStr, close, pct));
     } else {
       cell.className = 'day-cell no-data';
@@ -251,7 +253,7 @@ function buildCalendar(priceData) {
 
 function openModal(date, price, pct) {
   document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  document.getElementById('modal-price').textContent = `$${price.toFixed(2)}`;
+document.getElementById('modal-price').textContent = `WTI Close: $${price.toFixed(2)}`;
   const changeEl = document.getElementById('modal-change');
   const up = pct >= 0;
   changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}% on the day`;
