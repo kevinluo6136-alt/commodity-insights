@@ -51,7 +51,6 @@ import Footer from '../components/Footer.astro';
         font-weight: 600;
       }
       .day-cell {
-  aspect-ratio: 1;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -60,7 +59,8 @@ import Footer from '../components/Footer.astro';
   cursor: pointer;
   transition: transform 0.15s;
   position: relative;
-  min-height: 52px;
+  min-height: 70px;
+  padding: 0.5rem;
 }
       
       .day-cell:hover { transform: scale(1.05); }
@@ -70,7 +70,7 @@ import Footer from '../components/Footer.astro';
       .day-cell.big-up { background: #16a34a; }
       .day-cell.small-down { background: #fca5a5; }
       .day-cell.big-down { background: #dc2626; }
-      .day-cell.no-data { background: #1f2937; }
+      .day-cell.no-data { background: rgba(255,255,255,0.05); }
       .day-number {
   font-size: 0.85rem;
   font-weight: 700;
