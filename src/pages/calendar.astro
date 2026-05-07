@@ -9,7 +9,7 @@ import Footer from '../components/Footer.astro';
     <BaseHead title="Calendar | Student Commodity Insights" description="Daily WTI oil price calendar" />
     <style>
       .page-wrapper {
-        max-width: 860px;
+        max-width: 900px;
         margin: 0 auto;
         padding: 3rem 1.5rem;
       }
@@ -41,30 +41,28 @@ import Footer from '../components/Footer.astro';
       .calendar-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 6px;
+        gap: 8px;
       }
       .day-label {
         text-align: center;
         font-size: 0.75rem;
         color: var(--text-muted);
-        padding: 0.3rem 0;
+        padding: 0.5rem 0;
         font-weight: 600;
       }
       .day-cell {
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.15s;
-  position: relative;
-  min-height: 70px;
-  padding: 0.5rem;
-}
-      
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s;
+        min-height: 90px;
+        padding: 0.5rem;
+      }
       .day-cell:hover { transform: scale(1.05); }
-      .day-cell.empty { background: transparent; cursor: default; }
+      .day-cell.empty { background: transparent; cursor: default; pointer-events: none; }
       .day-cell.flat { background: #6b7280; }
       .day-cell.small-up { background: #86efac; }
       .day-cell.big-up { background: #16a34a; }
@@ -72,16 +70,18 @@ import Footer from '../components/Footer.astro';
       .day-cell.big-down { background: #dc2626; }
       .day-cell.no-data { background: rgba(255,255,255,0.05); }
       .day-number {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: white;
-  display: block;
-}
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        display: block;
+      }
+      .day-cell.no-data .day-number { opacity: 0.3; }
       .day-price {
-  font-size: 0.65rem;
-  color: rgba(255,255,255,0.8);
-  display: block;
-}
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.9);
+        display: block;
+        margin-top: 4px;
+      }
       .modal-overlay {
         display: none;
         position: fixed;
@@ -104,12 +104,12 @@ import Footer from '../components/Footer.astro';
         overflow-y: auto;
       }
       .modal h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-      .modal .price { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
+      .modal .price { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
       .modal .change { font-size: 1rem; margin-bottom: 1.5rem; }
       .modal .change.up { color: #4ade80; }
       .modal .change.down { color: #f87171; }
-      .modal h3 { font-size: 1rem; opacity: 0.7; margin-bottom: 0.5rem; margin-top: 1.5rem; }
-      .modal .dot-jot { 
+      .modal h3 { font-size: 0.85rem; opacity: 0.6; margin-bottom: 0.5rem; margin-top: 1.5rem; letter-spacing: 1px; }
+      .modal .dot-jot {
         background: rgba(255,255,255,0.05);
         border-radius: 8px;
         padding: 0.8rem;
@@ -133,11 +133,12 @@ import Footer from '../components/Footer.astro';
         cursor: pointer;
         opacity: 0.7;
       }
-      .loading-text {
+      .status-text {
         text-align: center;
         color: var(--text-muted);
-        padding: 2rem;
+        padding: 1rem;
         font-style: italic;
+        font-size: 0.85rem;
       }
     </style>
   </head>
@@ -168,7 +169,7 @@ import Footer from '../components/Footer.astro';
           <div class="day-label">Sat</div>
         </div>
 
-        <p class="loading-text" id="loading-text">Loading price data...</p>
+        <p class="status-text" id="status-text">Loading price data...</p>
       </div>
     </main>
 
@@ -188,94 +189,111 @@ import Footer from '../components/Footer.astro';
     <script>
       const API_KEY = 'VNJQUR88RZXL36F9';
 
-async function fetchWTIData() {
-  const res = await fetch(`https://www.alphavantage.co/query?function=WTI&interval=daily&apikey=${API_KEY}`);
-  const data = await res.json();
-  const result = {};
-  if (data.data) {
-    data.data.forEach(item => {
-      result[item.date] = { close: parseFloat(item.value) };
-    });
-  }
-  return result;
-}
+      async function fetchWTIData() {
+        const res = await fetch(
+          `https://www.alphavantage.co/query?function=WTI&interval=daily&apikey=${API_KEY}`
+        );
+        const data = await res.json();
+        const result = {};
+        if (data && data.data && Array.isArray(data.data)) {
+          data.data.forEach(item => {
+            if (item.date && item.value && item.value !== '.') {
+              result[item.date] = parseFloat(item.value);
+            }
+          });
+        }
+        return result;
+      }
 
-function getColorClass(pct) {
-  if (pct >= 1) return 'big-up';
-  if (pct > 0) return 'small-up';
-  if (pct <= -1) return 'big-down';
-  if (pct < 0) return 'small-down';
-  return 'flat';
-}
+      function getColorClass(pct) {
+        if (pct >= 1) return 'big-up';
+        if (pct > 0.1) return 'small-up';
+        if (pct <= -1) return 'big-down';
+        if (pct < -0.1) return 'small-down';
+        return 'flat';
+      }
 
-function buildCalendar(priceData) {
-  const grid = document.getElementById('calendar-grid');
-  document.getElementById('loading-text').style.display = 'none';
+      function buildCalendar(priceData) {
+        const grid = document.getElementById('calendar-grid');
+        const statusEl = document.getElementById('status-text');
+        statusEl.style.display = 'none';
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
 
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const dates = Object.keys(priceData).sort();
+        const sortedDates = Object.keys(priceData).sort();
 
-  for (let i = 0; i < firstDay; i++) {
-    const empty = document.createElement('div');
-    empty.className = 'day-cell empty';
-    grid.appendChild(empty);
-  }
+        for (let i = 0; i < firstDay; i++) {
+          const empty = document.createElement('div');
+          empty.className = 'day-cell empty';
+          grid.appendChild(empty);
+        }
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const cell = document.createElement('div');
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const cell = document.createElement('div');
+          const close = priceData[dateStr];
 
-    if (priceData[dateStr]) {
-      const close = priceData[dateStr].close;
-const idx = dates.indexOf(dateStr);
-const prevDate = idx > 0 ? dates[idx - 1] : null;
-const prevClose = prevDate && priceData[prevDate] ? priceData[prevDate].close : null;
-const pct = prevClose !== null ? ((close - prevClose) / prevClose) * 100 : 0;
-const colorClass = prevClose !== null ? getColorClass(pct) : 'flat';
+          if (close !== undefined) {
+            const idx = sortedDates.indexOf(dateStr);
+            const prevDate = idx > 0 ? sortedDates[idx - 1] : null;
+            const prevClose = prevDate ? priceData[prevDate] : null;
+            const pct = prevClose ? ((close - prevClose) / prevClose) * 100 : 0;
+            const colorClass = prevClose ? getColorClass(pct) : 'flat';
 
-      cell.className = `day-cell ${colorClass}`;
-      cell.innerHTML = `<span class="day-number">${d}</span>`;
-      cell.addEventListener('click', () => openModal(dateStr, close, pct));
-    } else {
-      cell.className = 'day-cell no-data';
-      cell.innerHTML = `<span class="day-number" style="opacity:0.3">${d}</span>`;
-    }
+            cell.className = `day-cell ${colorClass}`;
+            cell.innerHTML = `
+              <span class="day-number">${d}</span>
+              <span class="day-price">$${close.toFixed(2)}</span>
+            `;
+            cell.addEventListener('click', () => openModal(dateStr, close, pct));
+          } else {
+            cell.className = 'day-cell no-data';
+            cell.innerHTML = `<span class="day-number">${d}</span>`;
+          }
 
-    grid.appendChild(cell);
-  }
-}
+          grid.appendChild(cell);
+        }
 
-function openModal(date, price, pct) {
-  document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-document.getElementById('modal-price').textContent = `WTI Close: $${price.toFixed(2)}`;
-  const changeEl = document.getElementById('modal-change');
-  const up = pct >= 0;
-  changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}% on the day`;
-  changeEl.className = `change ${up ? 'up' : 'down'}`;
-  document.getElementById('modal-dotjots').innerHTML = '<div class="dot-jot">Dot jots coming soon.</div>';
-  document.getElementById('modal-summary').textContent = 'Daily summary coming soon.';
-  document.getElementById('modal-overlay').classList.add('active');
-}
+        const dataCount = Object.keys(priceData).filter(d => d.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length;
+        if (dataCount === 0) {
+          statusEl.style.display = 'block';
+          statusEl.textContent = 'Price data not yet available for this month — check back soon.';
+        }
+      }
 
-document.getElementById('modal-close').addEventListener('click', () => {
-  document.getElementById('modal-overlay').classList.remove('active');
-});
+      function openModal(date, price, pct) {
+        document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        document.getElementById('modal-price').textContent = `$${price.toFixed(2)}`;
+        const changeEl = document.getElementById('modal-change');
+        const up = pct >= 0;
+        changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}% on the day`;
+        changeEl.className = `change ${up ? 'up' : 'down'}`;
+        document.getElementById('modal-dotjots').innerHTML = '<div class="dot-jot">Dot jots coming soon.</div>';
+        document.getElementById('modal-summary').textContent = 'Daily summary coming soon.';
+        document.getElementById('modal-overlay').classList.add('active');
+      }
 
-document.getElementById('modal-overlay').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('modal-overlay')) {
-    document.getElementById('modal-overlay').classList.remove('active');
-  }
-});
+      document.getElementById('modal-close').addEventListener('click', () => {
+        document.getElementById('modal-overlay').classList.remove('active');
+      });
 
-fetchWTIData().then(buildCalendar).catch(() => {
-  document.getElementById('loading-text').textContent = 'Could not load price data.';
-});
+      document.getElementById('modal-overlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modal-overlay')) {
+          document.getElementById('modal-overlay').classList.remove('active');
+        }
+      });
+
+      fetchWTIData().then(buildCalendar).catch(err => {
+        console.error(err);
+        document.getElementById('status-text').textContent = 'Could not load price data.';
+      });
     </script>
   </body>
 </html>
