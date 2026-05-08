@@ -245,10 +245,7 @@ import Footer from '../components/Footer.astro';
             const colorClass = prevClose ? getColorClass(pct) : 'flat';
 
             cell.className = `day-cell ${colorClass}`;
-            cell.innerHTML = `
-              <span class="day-number">${d}</span>
-              <span class="day-price">$${close.toFixed(2)}</span>
-            `;
+cell.innerHTML = `<span class="day-number">${d}</span>`;
             cell.addEventListener('click', () => openModal(dateStr, close, pct));
           } else {
             cell.className = 'day-cell no-data';
