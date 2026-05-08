@@ -187,19 +187,31 @@ import Footer from '../components/Footer.astro';
     </div>
 
     <script>
-async function fetchWTIData() {
-  const res = await fetch('https://wti-price-cache.kevinluo6136.workers.dev');
-  const data = await res.json();
-  return data;
-}
+      const EIA_KEY = 'okDaeUUJEOLdhZv4jz9BDTg0aHcqwtyDHfcOrsf9';
+
+      async function fetchWTIData() {
+        const res = await fetch(
+          `https://api.eia.gov/v2/petroleum/pri/spt/data/?api_key=${EIA_KEY}&frequency=daily&data[0]=value&facets[series][]= RWTC&sort[0][column]=period&sort[0][direction]=desc&length=60`
+        );
+        const data = await res.json();
+        const result = {};
+        if (data && data.response && data.response.data) {
+          data.response.data.forEach(item => {
+            if (item.period && item.value !== null) {
+              result[item.period] = parseFloat(item.value);
+            }
+          });
+        }
+        return result;
+      }
 
       function getColorClass(pct) {
-  if (pct >= 5) return 'big-up';
-  if (pct > 0.5) return 'small-up';
-  if (pct <= -5) return 'big-down';
-  if (pct < -0.5) return 'small-down';
-  return 'flat';
-}
+        if (pct >= 5) return 'big-up';
+        if (pct > 0.5) return 'small-up';
+        if (pct <= -5) return 'big-down';
+        if (pct < -0.5) return 'small-down';
+        return 'flat';
+      }
 
       function buildCalendar(priceData) {
         const grid = document.getElementById('calendar-grid');
@@ -212,7 +224,6 @@ async function fetchWTIData() {
 
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-
         const sortedDates = Object.keys(priceData).sort();
 
         for (let i = 0; i < firstDay; i++) {
@@ -250,7 +261,7 @@ async function fetchWTIData() {
         const dataCount = Object.keys(priceData).filter(d => d.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length;
         if (dataCount === 0) {
           statusEl.style.display = 'block';
-          statusEl.textContent = 'Price data not yet available for this month — check back soon.';
+          statusEl.textContent = 'Price data not yet available — check back soon.';
         }
       }
 
