@@ -189,21 +189,28 @@ import Footer from '../components/Footer.astro';
     <script>
       const EIA_KEY = 'okDaeUUJEOLdhZv4jz9BDTg0aHcqwtyDHfcOrsf9';
 
-      async function fetchWTIData() {
-        const res = await fetch(
-          `https://api.eia.gov/v2/petroleum/pri/spt/data/?api_key=${EIA_KEY}&frequency=daily&data[0]=value&facets[series][]=RWTC&sort[0][column]=period&sort[0][direction]=desc&length=60`
-        );
-        const data = await res.json();
-        const result = {};
-        if (data && data.response && data.response.data) {
-          data.response.data.forEach(item => {
-            if (item.period && item.value !== null) {
-              result[item.period] = parseFloat(item.value);
-            }
-          });
-        }
-        return result;
+     async function fetchWTIData() {
+  const res = await fetch(
+    'https://api.oilpriceapi.com/v1/prices/historical?by_code=WTI_USD&by_period=past_month',
+    {
+      headers: {
+        'Authorization': 'Token 7101b9286bc9dbad663d10c24423f460b1e580d97ec919f4d89e60d9b35e915e',
+        'Content-Type': 'application/json'
       }
+    }
+  );
+  const data = await res.json();
+  const result = {};
+  if (data && data.data) {
+    data.data.forEach(item => {
+      const date = item.created_at.substring(0, 10);
+      if (item.price) {
+        result[date] = parseFloat(item.price);
+      }
+    });
+  }
+  return result;
+}
 
       function getColorClass(pct) {
         if (pct >= 5) return 'big-up';
