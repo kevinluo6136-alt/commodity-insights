@@ -63,12 +63,7 @@ import Footer from '../components/Footer.astro';
       }
       .day-cell:hover { transform: scale(1.05); }
       .day-cell.empty { background: transparent; cursor: default; pointer-events: none; }
-      .day-cell.flat { background: #6b7280 !important; }
-.day-cell.small-up { background: #86efac !important; }
-.day-cell.big-up { background: #16a34a !important; }
-.day-cell.small-down { background: #fca5a5 !important; }
-.day-cell.big-down { background: #dc2626 !important; }
-.day-cell.no-data { background: rgba(255,255,255,0.05) !important; }
+      .day-cell.no-data { background: rgba(255,255,255,0.05); }
       .day-number {
         font-size: 1rem;
         font-weight: 700;
@@ -76,12 +71,6 @@ import Footer from '../components/Footer.astro';
         display: block;
       }
       .day-cell.no-data .day-number { opacity: 0.3; }
-      .day-price {
-        font-size: 0.7rem;
-        color: rgba(255,255,255,0.9);
-        display: block;
-        margin-top: 4px;
-      }
       .modal-overlay {
         display: none;
         position: fixed;
@@ -103,11 +92,21 @@ import Footer from '../components/Footer.astro';
         max-height: 80vh;
         overflow-y: auto;
       }
-      .modal h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-      .modal .price { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-      .modal .change { font-size: 1rem; margin-bottom: 1.5rem; }
-      .modal .change.up { color: #4ade80; }
-      .modal .change.down { color: #f87171; }
+      .modal h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+      .price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.5rem;
+      }
+      .price-label { font-size: 0.85rem; opacity: 0.6; }
+      .price-value { font-size: 1.3rem; font-weight: 700; }
+      .price-change { font-size: 0.85rem; font-weight: 600; }
+      .price-change.up { color: #4ade80; }
+      .price-change.down { color: #f87171; }
       .modal h3 { font-size: 0.85rem; opacity: 0.6; margin-bottom: 0.5rem; margin-top: 1.5rem; letter-spacing: 1px; }
       .modal .dot-jot {
         background: rgba(255,255,255,0.05);
@@ -177,23 +176,29 @@ import Footer from '../components/Footer.astro';
       <div class="modal">
         <button class="modal-close" id="modal-close">×</button>
         <h2 id="modal-date"></h2>
-        <div class="price" id="modal-price"></div>
-        <div class="change" id="modal-change"></div>
+        <div id="modal-wti" class="price-row">
+          <span class="price-label">WTI Crude</span>
+          <span class="price-value" id="modal-wti-price"></span>
+          <span class="price-change" id="modal-wti-change"></span>
+        </div>
+        <div id="modal-brent" class="price-row">
+          <span class="price-label">Brent Crude</span>
+          <span class="price-value" id="modal-brent-price"></span>
+          <span class="price-change" id="modal-brent-change"></span>
+        </div>
         <h3>DOT JOTS</h3>
-        <div id="modal-dotjots"></div>
+        <div id="modal-dotjots"><div class="dot-jot">Dot jots coming soon.</div></div>
         <h3>DAILY SUMMARY</h3>
-        <div class="summary" id="modal-summary"></div>
+        <div class="summary" id="modal-summary">Daily summary coming soon.</div>
       </div>
     </div>
 
     <script>
-      const EIA_KEY = 'okDaeUUJEOLdhZv4jz9BDTg0aHcqwtyDHfcOrsf9';
-
-     async function fetchWTIData() {
-  const res = await fetch('https://wti-price-cache.kevinluo6136.workers.dev');
-  const data = await res.json();
-  return data;
-}
+      async function fetchPriceData() {
+        const res = await fetch('https://wti-price-cache.kevinluo6136.workers.dev');
+        const data = await res.json();
+        return data;
+      }
 
       function getColorClass(pct) {
         if (pct >= 5) return 'big-up';
@@ -204,6 +209,7 @@ import Footer from '../components/Footer.astro';
       }
 
       function buildCalendar(priceData) {
+        const wti = priceData.wti || {};
         const grid = document.getElementById('calendar-grid');
         const statusEl = document.getElementById('status-text');
         statusEl.style.display = 'none';
@@ -214,7 +220,7 @@ import Footer from '../components/Footer.astro';
 
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const sortedDates = Object.keys(priceData).sort();
+        const sortedDates = Object.keys(wti).sort();
 
         for (let i = 0; i < firstDay; i++) {
           const empty = document.createElement('div');
@@ -225,18 +231,18 @@ import Footer from '../components/Footer.astro';
         for (let d = 1; d <= daysInMonth; d++) {
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
           const cell = document.createElement('div');
-          const close = priceData[dateStr];
+          const close = wti[dateStr];
 
           if (close !== undefined) {
             const idx = sortedDates.indexOf(dateStr);
             const prevDate = idx > 0 ? sortedDates[idx - 1] : null;
-            const prevClose = prevDate ? priceData[prevDate] : null;
+            const prevClose = prevDate ? wti[prevDate] : null;
             const pct = prevClose ? ((close - prevClose) / prevClose) * 100 : 0;
             const colorClass = prevClose ? getColorClass(pct) : 'flat';
 
             cell.className = `day-cell ${colorClass}`;
-cell.innerHTML = `<span class="day-number">${d}</span>`;
-            cell.addEventListener('click', () => openModal(dateStr, close, pct));
+            cell.innerHTML = `<span class="day-number">${d}</span>`;
+            cell.addEventListener('click', () => openModal(dateStr, priceData, pct));
           } else {
             cell.className = 'day-cell no-data';
             cell.innerHTML = `<span class="day-number">${d}</span>`;
@@ -245,24 +251,51 @@ cell.innerHTML = `<span class="day-number">${d}</span>`;
           grid.appendChild(cell);
         }
 
-        const dataCount = Object.keys(priceData).filter(d => d.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length;
+        const dataCount = Object.keys(wti).filter(d => d.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length;
         if (dataCount === 0) {
           statusEl.style.display = 'block';
           statusEl.textContent = 'Price data not yet available — check back soon.';
         }
       }
 
-      function openModal(date, price, pct) {
+      function getPct(data, date, sortedDates) {
+        const close = data[date];
+        if (!close) return null;
+        const idx = sortedDates.indexOf(date);
+        const prevDate = idx > 0 ? sortedDates[idx - 1] : null;
+        const prevClose = prevDate ? data[prevDate] : null;
+        return prevClose ? ((close - prevClose) / prevClose) * 100 : 0;
+      }
+
+      function openModal(date, priceData, wtiPct) {
+        const wti = priceData.wti || {};
+        const brent = priceData.brent || {};
+        const wtiSorted = Object.keys(wti).sort();
+        const brentSorted = Object.keys(brent).sort();
+
         document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
-        document.getElementById('modal-price').textContent = `$${price.toFixed(2)}`;
-        const changeEl = document.getElementById('modal-change');
-        const up = pct >= 0;
-        changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}% on the day`;
-        changeEl.className = `change ${up ? 'up' : 'down'}`;
-        document.getElementById('modal-dotjots').innerHTML = '<div class="dot-jot">Dot jots coming soon.</div>';
-        document.getElementById('modal-summary').textContent = 'Daily summary coming soon.';
+
+        const wtiPrice = wti[date];
+        if (wtiPrice) {
+          document.getElementById('modal-wti-price').textContent = `$${wtiPrice.toFixed(2)}`;
+          const up = wtiPct >= 0;
+          const changeEl = document.getElementById('modal-wti-change');
+          changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(wtiPct).toFixed(2)}%`;
+          changeEl.className = `price-change ${up ? 'up' : 'down'}`;
+        }
+
+        const brentPrice = brent[date];
+        const brentPct = getPct(brent, date, brentSorted);
+        if (brentPrice) {
+          document.getElementById('modal-brent-price').textContent = `$${brentPrice.toFixed(2)}`;
+          const up = brentPct >= 0;
+          const changeEl = document.getElementById('modal-brent-change');
+          changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(brentPct).toFixed(2)}%`;
+          changeEl.className = `price-change ${up ? 'up' : 'down'}`;
+        }
+
         document.getElementById('modal-overlay').classList.add('active');
       }
 
@@ -276,7 +309,7 @@ cell.innerHTML = `<span class="day-number">${d}</span>`;
         }
       });
 
-      fetchWTIData().then(buildCalendar).catch(err => {
+      fetchPriceData().then(buildCalendar).catch(err => {
         console.error(err);
         document.getElementById('status-text').textContent = 'Could not load price data.';
       });
