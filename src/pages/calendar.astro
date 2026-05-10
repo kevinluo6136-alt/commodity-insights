@@ -244,8 +244,14 @@ import Footer from '../components/Footer.astro';
             cell.innerHTML = `<span class="day-number">${d}</span>`;
             cell.addEventListener('click', () => openModal(dateStr, priceData, pct));
           } else {
-            cell.className = 'day-cell no-data';
-            cell.innerHTML = `<span class="day-number">${d}</span>`;
+            const isToday = dateStr === new Date().toISOString().split('T')[0];
+  cell.className = `day-cell no-data${isToday ? ' today-clickable' : ''}`;
+  cell.innerHTML = `<span class="day-number">${d}</span>`;
+  if (isToday) {
+    cell.style.cursor = 'pointer';
+    cell.style.pointerEvents = 'auto';
+    cell.addEventListener('click', () => openModal(dateStr, priceData, 0));
+  }
           }
 
           grid.appendChild(cell);
