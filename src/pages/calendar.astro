@@ -267,38 +267,64 @@ import Footer from '../components/Footer.astro';
         return prevClose ? ((close - prevClose) / prevClose) * 100 : 0;
       }
 
-      function openModal(date, priceData, wtiPct) {
-        const wti = priceData.wti || {};
-        const brent = priceData.brent || {};
-        const wtiSorted = Object.keys(wti).sort();
-        const brentSorted = Object.keys(brent).sort();
+      async function openModal(date, priceData, wtiPct) {
+  const wti = priceData.wti || {};
+  const brent = priceData.brent || {};
+  const wtiSorted = Object.keys(wti).sort();
+  const brentSorted = Object.keys(brent).sort();
 
-        document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
+  document.getElementById('modal-date').textContent = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
 
-        const wtiPrice = wti[date];
-        if (wtiPrice) {
-          document.getElementById('modal-wti-price').textContent = `$${wtiPrice.toFixed(2)}`;
-          const up = wtiPct >= 0;
-          const changeEl = document.getElementById('modal-wti-change');
-          changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(wtiPct).toFixed(2)}%`;
-          changeEl.className = `price-change ${up ? 'up' : 'down'}`;
-        }
+  const wtiPrice = wti[date];
+  if (wtiPrice) {
+    document.getElementById('modal-wti-price').textContent = `$${wtiPrice.toFixed(2)}`;
+    const up = wtiPct >= 0;
+    const changeEl = document.getElementById('modal-wti-change');
+    changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(wtiPct).toFixed(2)}%`;
+    changeEl.className = `price-change ${up ? 'up' : 'down'}`;
+  }
 
-        const brentPrice = brent[date];
-        const brentPct = getPct(brent, date, brentSorted);
-        if (brentPrice) {
-          document.getElementById('modal-brent-price').textContent = `$${brentPrice.toFixed(2)}`;
-          const up = brentPct >= 0;
-          const changeEl = document.getElementById('modal-brent-change');
-          changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(brentPct).toFixed(2)}%`;
-          changeEl.className = `price-change ${up ? 'up' : 'down'}`;
-        }
+  const brentPrice = brent[date];
+  const brentPct = getPct(brent, date, brentSorted);
+  if (brentPrice) {
+    document.getElementById('modal-brent-price').textContent = `$${brentPrice.toFixed(2)}`;
+    const up = brentPct >= 0;
+    const changeEl = document.getElementById('modal-brent-change');
+    changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(brentPct).toFixed(2)}%`;
+    changeEl.className = `price-change ${up ? 'up' : 'down'}`;
+  }
 
-        document.getElementById('modal-overlay').classList.add('active');
-      }
+  // Fetch dot jots
+  const dotjotsEl = document.getElementById('modal-dotjots');
+  const summaryEl = document.getElementById('modal-summary');
+  dotjotsEl.innerHTML = '<div class="dot-jot">Loading...</div>';
+  summaryEl.textContent = '';
 
+  try {
+    const res = await fetch(`https://dotjots-api.kevinluo6136.workers.dev/?date=${date}`);
+    const jots = await res.json();
+
+    if (jots.length === 0) {
+      dotjotsEl.innerHTML = '<div class="dot-jot" style="opacity:0.4">No dot jots for this day.</div>';
+      summaryEl.textContent = '';
+    } else {
+      dotjotsEl.innerHTML = jots.map(j => `
+        <div class="dot-jot">
+          <strong>${j.headline}</strong>
+        </div>
+      `).join('');
+      // Use the last jot's summary as the daily summary
+      const lastWithSummary = [...jots].reverse().find(j => j.summary);
+      summaryEl.textContent = lastWithSummary ? lastWithSummary.summary : 'No summary available.';
+    }
+  } catch (e) {
+    dotjotsEl.innerHTML = '<div class="dot-jot" style="opacity:0.4">Could not load dot jots.</div>';
+  }
+
+  document.getElementById('modal-overlay').classList.add('active');
+}
       document.getElementById('modal-close').addEventListener('click', () => {
         document.getElementById('modal-overlay').classList.remove('active');
       });
