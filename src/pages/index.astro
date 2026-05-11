@@ -4,33 +4,17 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
-
-const posts = (await getCollection('blog')).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
-
-function timeAgo(date: Date) {
-  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-  const days = Math.floor(seconds / 86400);
-  const weeks = Math.floor(days / 7);
-  const months = Math.floor(days / 30);
-  if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
-  if (weeks > 0) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-  if (days > 0) return `${days}d ago`;
-  return 'Today';
-}
-
-function getSlug(id: string) {
-  return id.replace(/\.md$/, '').replace(/\.mdx$/, '');
-}
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+* {
+  font-family: 'Times New Roman', Times, serif;
+}
     <style>
       .page-wrapper {
-        max-width: 780px;
+        max-width: 1100px;
         margin: 0 auto;
         padding: 3rem 1.5rem;
       }
@@ -39,58 +23,72 @@ function getSlug(id: string) {
         padding-bottom: 1.5rem;
         margin-bottom: 2.5rem;
       }
-      .page-header h1 {
-        font-size: 2rem;
-        color: var(--navy);
-      }
-      .post-list {
-        display: flex;
-        flex-direction: column;
-      }
-      .post-item {
+      .page-header h1 { font-size: 2rem; color: var(--navy); }
+      .page-header p { color: rgba(255,255,255,0.4); font-size: 0.9rem; margin-top: 0.3rem; }
+      .day-block { margin-bottom: 2.5rem; }
+      .day-header {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 1.1rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-        text-decoration: none;
-        transition: opacity 0.2s;
+        gap: 12px;
+        padding: 0.5rem 0;
+        border-bottom: 0.5px solid rgba(255,255,255,0.1);
+        margin-bottom: 1rem;
       }
-      .post-item:hover { opacity: 0.8; }
-      .post-icon {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        border-radius: 50%;
-        background-color: #1a3260;
+      .day-date { font-size: 13px; font-weight: 600; color: #16a34a; letter-spacing: 0.5px; }
+      .day-badge {
+        font-size: 11px;
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.4);
+        border-radius: 6px;
+        padding: 2px 8px;
+        border: 0.5px solid rgba(255,255,255,0.1);
+      }
+      .day-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+      }
+      .card {
+        background: rgba(255,255,255,0.03);
+        border: 0.5px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+      }
+      .card-label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.3);
+        letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+      }
+      .points-list { list-style: none; padding: 0; margin: 0; }
+      .points-list li {
+        font-size: 13px;
+        color: rgba(255,255,255,0.85);
+        padding: 5px 0;
+        border-bottom: 0.5px solid rgba(255,255,255,0.06);
         display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #6b9fff;
-        font-weight: 700;
-        font-size: 1rem;
-      }
-      .post-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-      }
-      .post-title {
-        font-family: 'Source Serif 4', serif;
-        font-size: 1rem;
-        color: white;
+        gap: 8px;
         line-height: 1.4;
       }
-      .post-meta {
-        font-size: 0.8rem;
-        color: rgba(255,255,255,0.4);
-      }
-      .empty-state {
-        text-align: center;
-        color: rgba(255,255,255,0.4);
-        font-style: italic;
-        padding: 3rem 0;
-      }
+      .points-list li:last-child { border-bottom: none; }
+      .point-num { color: #16a34a; font-weight: 600; min-width: 14px; }
+      .summary-text { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.6; margin: 0 0 1rem 0; }
+      .outlook-row { display: flex; flex-direction: column; gap: 8px; }
+      .outlook-item { display: flex; flex-direction: column; gap: 2px; }
+      .outlook-tag { font-size: 11px; font-weight: 600; }
+      .outlook-tag.bull { color: #16a34a; }
+      .outlook-tag.bear { color: #dc2626; }
+      .outlook-tag.base { color: rgba(255,255,255,0.4); }
+      .outlook-val { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.4; }
+      .divider { border: none; border-top: 0.5px solid rgba(255,255,255,0.08); margin: 0.75rem 0; }
+      .ai-tag { font-size: 11px; font-weight: 600; color: #7c3aed; }
+      .watch-tag { font-size: 11px; font-weight: 600; color: #d97706; margin-bottom: 4px; display: block; }
+      .watch-list { list-style: none; padding: 0; margin: 0; }
+      .watch-list li { font-size: 12px; color: rgba(255,255,255,0.5); padding: 3px 0; display: flex; gap: 6px; line-height: 1.4; }
+      .watch-dot { color: #d97706; }
+      .dim { opacity: 0.3; }
+      .loading-text { color: rgba(255,255,255,0.3); font-style: italic; font-size: 0.85rem; }
     </style>
   </head>
   <body>
@@ -98,24 +96,125 @@ function getSlug(id: string) {
     <main>
       <div class="page-wrapper">
         <div class="page-header">
-          <h1>Latest Insights</h1>
+          <h1>Daily Market Briefing</h1>
+          <p>AI-curated oil market insights — updated every evening</p>
         </div>
-        <div class="post-list">
-          {posts.length === 0 && (
-            <p class="empty-state">No posts yet — check back soon.</p>
-          )}
-          {posts.map((post) => (
-            <a class="post-item" href={`/blog/${getSlug(post.id)}/`}>
-              <div class="post-icon">S</div>
-              <div class="post-info">
-                <span class="post-title">{post.data.title}</span>
-                <span class="post-meta">{timeAgo(new Date(post.data.pubDate))} · Student Commodity Insights</span>
-              </div>
-            </a>
-          ))}
+        <div id="feed">
+          <p class="loading-text">Loading briefings...</p>
         </div>
       </div>
     </main>
     <Footer />
+
+    <script>
+      async function fetchEOD(date) {
+        const res = await fetch(`https://dotjots-api.kevinluo6136.workers.dev/eod?date=${date}`);
+        const data = await res.json();
+        return data;
+      }
+
+      function formatDate(dateStr) {
+        return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
+          month: 'long', day: 'numeric', year: 'numeric'
+        });
+      }
+
+      function isToday(dateStr) {
+        return dateStr === new Date().toISOString().split('T')[0];
+      }
+
+      function renderDay(dateStr, data) {
+        const today = isToday(dateStr);
+        if (!data) {
+          return `
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-date">${formatDate(dateStr)}</span>
+                ${today ? '<span class="day-badge">Today</span>' : ''}
+              </div>
+              <div class="day-grid">
+                <div class="card"><div class="card-label">Key points</div><p class="loading-text">No data yet.</p></div>
+                <div class="card"><div class="card-label">Daily summary</div><p class="loading-text">No data yet.</p></div>
+                <div class="card"><div class="card-label">AI read</div><p class="loading-text">No data yet.</p></div>
+              </div>
+            </div>`;
+        }
+
+        const points = (data.points || []).map((p, i) =>
+          `<li><span class="point-num">${i + 1}</span>${p}</li>`
+        ).join('');
+
+        const watch = (data.watch || []).map(w =>
+          `<li><span class="watch-dot">›</span>${w}</li>`
+        ).join('');
+
+        return `
+          <div class="day-block">
+            <div class="day-header">
+              <span class="day-date">${formatDate(dateStr)}</span>
+              ${today ? '<span class="day-badge">Today</span>' : ''}
+            </div>
+            <div class="day-grid">
+              <div class="card">
+                <div class="card-label">Key points</div>
+                <ul class="points-list">${points}</ul>
+              </div>
+              <div class="card">
+                <div class="card-label">Daily summary</div>
+                <p class="summary-text">${data.summary || ''}</p>
+                <hr class="divider">
+                <div class="outlook-row">
+                  <div class="outlook-item">
+                    <span class="outlook-tag bull">Bullish</span>
+                    <span class="outlook-val">${data.bullish || ''}</span>
+                  </div>
+                  <div class="outlook-item">
+                    <span class="outlook-tag base">Base case</span>
+                    <span class="outlook-val">${data.base || ''}</span>
+                  </div>
+                  <div class="outlook-item">
+                    <span class="outlook-tag bear">Bearish</span>
+                    <span class="outlook-val">${data.bearish || ''}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-label">AI read</div>
+                <div class="outlook-item" style="margin-bottom: 10px;">
+                  <span class="ai-tag">Interpretation</span>
+                  <span class="outlook-val" style="margin-top: 2px;">${data.ai_read || ''}</span>
+                </div>
+                <hr class="divider">
+                <span class="watch-tag">Things to watch</span>
+                <ul class="watch-list">${watch}</ul>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      async function buildFeed() {
+        const feed = document.getElementById('feed');
+        const today = new Date();
+        const dates = [];
+
+        for (let i = 0; i < 60; i++) {
+          const d = new Date(today);
+          d.setDate(today.getDate() - i);
+          dates.push(d.toISOString().split('T')[0]);
+        }
+
+        const results = await Promise.all(dates.map(fetchEOD));
+        const hasAny = results.some(r => r !== null);
+
+        if (!hasAny) {
+          feed.innerHTML = '<p class="loading-text">No briefings yet — check back after market close.</p>';
+          return;
+        }
+
+        feed.innerHTML = dates.map((date, i) => renderDay(date, results[i])).join('');
+      }
+
+      buildFeed();
+    </script>
   </body>
 </html>
