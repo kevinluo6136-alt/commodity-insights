@@ -188,8 +188,6 @@ import Footer from '../components/Footer.astro';
         </div>
         <h3>DOT JOTS</h3>
         <div id="modal-dotjots"><div class="dot-jot">Dot jots coming soon.</div></div>
-        <h3>DAILY SUMMARY</h3>
-        <div class="summary" id="modal-summary">Daily summary coming soon.</div>
       </div>
     </div>
 
@@ -304,9 +302,8 @@ import Footer from '../components/Footer.astro';
 
   // Fetch dot jots
   const dotjotsEl = document.getElementById('modal-dotjots');
-  const summaryEl = document.getElementById('modal-summary');
   dotjotsEl.innerHTML = '<div class="dot-jot">Loading...</div>';
-  summaryEl.textContent = '';
+
 
   try {
     const res = await fetch(`https://dotjots-api.kevinluo6136.workers.dev/?date=${date}`);
@@ -314,7 +311,7 @@ import Footer from '../components/Footer.astro';
 
     if (jots.length === 0) {
       dotjotsEl.innerHTML = '<div class="dot-jot" style="opacity:0.4">No dot jots for this day.</div>';
-      summaryEl.textContent = '';
+
     } else {
       dotjotsEl.innerHTML = jots.map(j => `
         <div class="dot-jot">
@@ -322,8 +319,7 @@ import Footer from '../components/Footer.astro';
         </div>
       `).join('');
       // Use the last jot's summary as the daily summary
-      const lastWithSummary = [...jots].reverse().find(j => j.summary);
-      summaryEl.textContent = lastWithSummary ? lastWithSummary.summary : 'No summary available.';
+      
     }
   } catch (e) {
     dotjotsEl.innerHTML = '<div class="dot-jot" style="opacity:0.4">Could not load dot jots.</div>';
