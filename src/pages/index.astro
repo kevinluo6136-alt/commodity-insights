@@ -142,7 +142,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
         }
 
         const points = (data.points || []).map((p, i) =>
-          `<li><span class="point-num">${i + 1}</span>${p}</li>`
+          `<li>${p}</li>`
         ).join('');
 
         const watch = (data.watch || []).map(w =>
