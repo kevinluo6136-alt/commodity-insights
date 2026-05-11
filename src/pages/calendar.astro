@@ -108,14 +108,14 @@ import Footer from '../components/Footer.astro';
       .price-change.up { color: #4ade80; }
       .price-change.down { color: #f87171; }
       .modal h3 { font-size: 0.85rem; opacity: 0.6; margin-bottom: 0.5rem; margin-top: 1.5rem; letter-spacing: 1px; }
-      .modal .dot-jot {
-        background: rgba(255,255,255,0.05);
-        border-radius: 8px;
-        padding: 0.8rem;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        line-height: 1.5;
-      }
+    .modal .dot-jot {
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 0.5rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
       .modal .summary {
         background: rgba(255,255,255,0.05);
         border-radius: 8px;
@@ -313,11 +313,13 @@ import Footer from '../components/Footer.astro';
       dotjotsEl.innerHTML = '<div class="dot-jot" style="opacity:0.4">No dot jots for this day.</div>';
 
     } else {
-      dotjotsEl.innerHTML = jots.map(j => `
-        <div class="dot-jot">
-          <strong>${j.headline}</strong>
-        </div>
-      `).join('');
+dotjotsEl.innerHTML = jots.map(j => `
+  <div class="dot-jot">
+    <div style="font-size:0.8rem; opacity:0.5; margin-bottom:4px;">${j.time ? new Date(j.time).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}) : ''}</div>
+    <div style="font-size:0.85rem; font-weight:400; margin-bottom:6px;">${j.headline}</div>
+    <div style="font-size:0.78rem; opacity:0.6; line-height:1.6; white-space:pre-wrap;">${j.summary || ''}</div>
+  </div>
+`).join('');
       // Use the last jot's summary as the daily summary
       
     }
