@@ -210,7 +210,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
         const hasAny = results.some(r => r !== null);
 
         feed.innerHTML = dates.map((date, i) => renderDay(date, results[i])).join('');
-
+}
       buildFeed();
     </script>
   </body>
