@@ -283,24 +283,34 @@ const isToday = dateStr === localDate;
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
 
-  const wtiPrice = wti[date];
-  if (wtiPrice) {
-    document.getElementById('modal-wti-price').textContent = `$${wtiPrice.toFixed(2)}`;
-    const up = wtiPct >= 0;
-    const changeEl = document.getElementById('modal-wti-change');
-    changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(wtiPct).toFixed(2)}%`;
-    changeEl.className = `price-change ${up ? 'up' : 'down'}`;
-  }
+const now = new Date();
+const localDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+const isPastDay = date < localDate;
 
-  const brentPrice = brent[date];
-  const brentPct = getPct(brent, date, brentSorted);
-  if (brentPrice) {
-    document.getElementById('modal-brent-price').textContent = `$${brentPrice.toFixed(2)}`;
-    const up = brentPct >= 0;
-    const changeEl = document.getElementById('modal-brent-change');
-    changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(brentPct).toFixed(2)}%`;
-    changeEl.className = `price-change ${up ? 'up' : 'down'}`;
-  }
+const wtiPrice = wti[date];
+if (wtiPrice && isPastDay) {
+  document.getElementById('modal-wti-price').textContent = `$${wtiPrice.toFixed(2)}`;
+  const up = wtiPct >= 0;
+  const changeEl = document.getElementById('modal-wti-change');
+  changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(wtiPct).toFixed(2)}%`;
+  changeEl.className = `price-change ${up ? 'up' : 'down'}`;
+} else if (!isPastDay) {
+  document.getElementById('modal-wti-price').textContent = 'Live';
+  document.getElementById('modal-wti-change').textContent = '';
+}
+
+const brentPrice = brent[date];
+const brentPct = getPct(brent, date, brentSorted);
+if (brentPrice && isPastDay) {
+  document.getElementById('modal-brent-price').textContent = `$${brentPrice.toFixed(2)}`;
+  const up = brentPct >= 0;
+  const changeEl = document.getElementById('modal-brent-change');
+  changeEl.textContent = `${up ? '▲' : '▼'} ${Math.abs(brentPct).toFixed(2)}%`;
+  changeEl.className = `price-change ${up ? 'up' : 'down'}`;
+} else if (!isPastDay) {
+  document.getElementById('modal-brent-price').textContent = 'Live';
+  document.getElementById('modal-brent-change').textContent = '';
+}
 
   // Fetch dot jots
   const dotjotsEl = document.getElementById('modal-dotjots');
