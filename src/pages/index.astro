@@ -209,13 +209,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
         const results = await Promise.all(dates.map(fetchEOD));
         const hasAny = results.some(r => r !== null);
 
-        if (!hasAny) {
-          feed.innerHTML = '<p class="loading-text">No briefings yet — check back after market close.</p>';
-          return;
-        }
-
         feed.innerHTML = dates.map((date, i) => renderDay(date, results[i])).join('');
-      }
 
       buildFeed();
     </script>
