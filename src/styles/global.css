@@ -9,6 +9,7 @@
   --text: #1a1a2e;
   --text-muted: #6b7280;
   --border: #e2e5ed;
+  --dark-bg: #0a0f1e;
 }
 
 * {
@@ -24,6 +25,11 @@ body {
   line-height: 1.8;
 }
 
+body.dark {
+  background-color: var(--dark-bg);
+  color: var(--white);
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -32,6 +38,8 @@ a {
 h1, h2, h3 {
   font-family: 'Playfair Display', Georgia, serif;
 }
+
+/* Calendar day cells */
 .day-cell { border-radius: 8px; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.15s; padding: 0.5rem; }
 .day-cell:hover { transform: scale(1.05); }
 .day-cell.empty { background: transparent !important; cursor: default; pointer-events: none; }
@@ -43,3 +51,16 @@ h1, h2, h3 {
 .day-cell.no-data { background: rgba(255,255,255,0.05) !important; }
 .day-number { font-size: 1rem; font-weight: 700; color: white; display: block; }
 .day-cell.no-data .day-number { opacity: 0.3; }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .day-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .calendar-grid {
+    gap: 4px;
+  }
+  .day-cell {
+    min-height: 60px;
+  }
+}
