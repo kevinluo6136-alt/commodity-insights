@@ -1,23 +1,7 @@
----
-import { SITE_TITLE } from '../consts';
----
-<header>
-  <nav>
-    <a class="site-title" href="/">{SITE_TITLE}</a>
-    <div class="nav-links">
-  <a href="/">Home</a>
-  <a href="/blog">Blog</a>
-  <a href="/markets">Markets</a>
-  <a href="/calendar">Calendar</a>
-  <a href="/about">About</a>
-</div>
-  </nav>
-</header>
-
 <style>
   header {
     background-color: var(--navy);
-    padding: 1rem 2rem;
+    padding: 1rem 1.5rem;
   }
   nav {
     max-width: 780px;
@@ -25,6 +9,8 @@ import { SITE_TITLE } from '../consts';
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   .site-title {
     font-family: 'Playfair Display', serif;
@@ -32,18 +18,18 @@ import { SITE_TITLE } from '../consts';
     font-size: 1.1rem;
     font-weight: 700;
     letter-spacing: 0.5px;
+    white-space: nowrap;
   }
   .nav-links {
     display: flex;
-    gap: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
   .nav-links a {
     color: var(--white);
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     opacity: 0.85;
     transition: opacity 0.2s;
   }
-  .nav-links a:hover {
-    opacity: 1;
-  }
+  .nav-links a:hover { opacity: 1; }
 </style>
