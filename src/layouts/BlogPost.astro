@@ -51,10 +51,29 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 			.last-updated-on {
 				font-style: italic;
 			}
+body.dark {
+  background-color: #0a0f1e;
+  color: white;
+}
+.hero-image img {
+  max-width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: cover;
+}
+.prose {
+  color: rgba(255,255,255,0.85);
+}
+.title h1 {
+  color: white;
+}
+.date {
+  color: rgba(255,255,255,0.5);
+}
 		</style>
 	</head>
 
-	<body>
+	<body class="dark">
 		<Header />
 		<main>
 			<article>
