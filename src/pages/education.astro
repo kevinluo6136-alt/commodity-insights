@@ -1,20 +1,39 @@
-<a href="/education/game" style="text-decoration:none;">
-<div style="
-    background:#141720;
-    border:1px solid #ffffff14;
-    border-radius:16px;
-    padding:1.25rem 1.5rem;
-    cursor:pointer;
-    transition:border-color .2s;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  ">
-    <div>
-      <div style="font-size:11px;color:#e8a020;font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;">Education</div>
-      <div style="font-size:18px;font-weight:600;color:#f0f2f8;">Introduction to Futures</div>
-      <div style="font-size:13px;color:#8a90a8;margin-top:4px;">Interactive game — commodities, equity index & options</div>
-    </div>
-<div style="font-size:24px;color:#e8a020;">&#8594;</div>
-</div>
-</a>
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+<html lang="en">
+  <head>
+    <BaseHead title="Education" description="Learn futures trading through interactive games" />
+  </head>
+  <body class="dark">
+    <Header />
+    <main style="max-width:800px;margin:0 auto;padding:2rem 1rem;">
+      
+      <h1 style="color:white;margin-bottom:1.5rem;">Education</h1>
+
+      <a href="/education/game" style="text-decoration:none;">
+        <div style="
+          background:#141720;
+          border:1px solid #ffffff14;
+          border-radius:16px;
+          padding:1.25rem 1.5rem;
+          cursor:pointer;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+        ">
+          <div>
+            <div style="font-size:11px;color:#e8a020;font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;">Education</div>
+            <div style="font-size:18px;font-weight:600;color:#f0f2f8;">Introduction to Futures</div>
+            <div style="font-size:13px;color:#8a90a8;margin-top:4px;">Interactive game — commodities, equity index & options</div>
+          </div>
+          <div style="font-size:24px;color:#e8a020;">&#8594;</div>
+        </div>
+      </a>
+
+    </main>
+    <Footer />
+  </body>
+</html>
