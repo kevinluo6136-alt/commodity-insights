@@ -1,21 +1,53 @@
 ---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 ---
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Education — Student Commodity Insights</title>
-</head>
-<body>
-  <!-- your existing site layout/nav here -->
-  
-  <h1>Education</h1>
-  
-  <a href="/education/futures-game">
-    <div class="edu-card">
-      <h2>Introduction to Futures</h2>
-      <p>Learn futures trading through an interactive game — commodities, equity index, and options tracks.</p>
-    </div>
-  </a>
-
-</body>
+  <head>
+    <BaseHead title="Intro to Futures | Student Commodity Insights" description="Learn about commodity futures through an interactive game" />
+    <style>
+      body { background: #0a0f1e; }
+      .page-wrapper {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+      }
+      .page-header {
+        border-bottom: 2px solid rgba(255,255,255,0.1);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .page-header h1 { font-size: 2rem; color: white; }
+      .page-header p { color: rgba(255,255,255,0.4); font-size: 0.9rem; margin-top: 0.3rem; }
+      .game-container {
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 0.5px solid rgba(255,255,255,0.1);
+      }
+      iframe {
+        width: 100%;
+        height: 800px;
+        border: none;
+        display: block;
+      }
+    </style>
+  </head>
+  <body class="dark">
+    <Header />
+    <main>
+      <div class="page-wrapper">
+        <div class="page-header">
+          <h1>Intro to Futures</h1>
+          <p>Learn commodity futures through an interactive simulation</p>
+        </div>
+        <div class="game-container">
+          <iframe src="/education/index.html" title="Intro to Futures Game"></iframe>
+        </div>
+      </div>
+    </main>
+    <Footer />
+  </body>
 </html>
