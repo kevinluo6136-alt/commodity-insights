@@ -1,53 +1,20 @@
----
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
----
-<!doctype html>
-<html lang="en">
-  <head>
-    <BaseHead title="Intro to Futures | Student Commodity Insights" description="Learn about commodity futures through an interactive game" />
-    <style>
-      body { background: #0a0f1e; }
-      .page-wrapper {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-      }
-      .page-header {
-        border-bottom: 2px solid rgba(255,255,255,0.1);
-        padding-bottom: 1.5rem;
-        margin-bottom: 2rem;
-      }
-      .page-header h1 { font-size: 2rem; color: white; }
-      .page-header p { color: rgba(255,255,255,0.4); font-size: 0.9rem; margin-top: 0.3rem; }
-      .game-container {
-        width: 100%;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 0.5px solid rgba(255,255,255,0.1);
-      }
-      iframe {
-        width: 100%;
-        height: 800px;
-        border: none;
-        display: block;
-      }
-    </style>
-  </head>
-  <body class="dark">
-    <Header />
-    <main>
-      <div class="page-wrapper">
-        <div class="page-header">
-          <h1>Intro to Futures</h1>
-          <p>Learn commodity futures through an interactive simulation</p>
-        </div>
-        <div class="game-container">
-          <iframe src="/education/index.html" title="Intro to Futures Game"></iframe>
-        </div>
-      </div>
-    </main>
-    <Footer />
-  </body>
-</html>
+<a href="/education" style="text-decoration:none;">
+  <div style="
+    background:#141720;
+    border:1px solid #ffffff14;
+    border-radius:16px;
+    padding:1.25rem 1.5rem;
+    cursor:pointer;
+    transition:border-color .2s;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  ">
+    <div>
+      <div style="font-size:11px;color:#e8a020;font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;">Education</div>
+      <div style="font-size:18px;font-weight:600;color:#f0f2f8;">Introduction to Futures</div>
+      <div style="font-size:13px;color:#8a90a8;margin-top:4px;">Interactive game — commodities, equity index & options</div>
+    </div>
+    <div style="font-size:24px;color:#e8a020;">→</div>
+  </div>
+</a>
